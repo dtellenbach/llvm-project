@@ -10547,19 +10547,40 @@ let Predicates = [HasCMPBR] in {
  defm : CmpBranchWRegisterAlias<"cbhlt", "CBHGT">;
 
   // Pseudos for codegen
-  def CBWPrr : CmpBranchRegisterPseudo<GPR32>;
-  def CBXPrr : CmpBranchRegisterPseudo<GPR64>;
-  def CBWPri : CmpBranchImmediatePseudo<GPR32, uimm6_32b>;
-  def CBXPri : CmpBranchImmediatePseudo<GPR64, uimm6_64b>;
+ def CBBPrr : CmpBranchExtRegisterPseudo;
+ def CBHPrr : CmpBranchExtRegisterPseudo;
+ def CBWPrr : CmpBranchRegisterPseudo<GPR32>;
+ def CBXPrr : CmpBranchRegisterPseudo<GPR64>;
+ def CBWPri : CmpBranchImmediatePseudo<GPR32, uimm6_32b>;
+ def CBXPri : CmpBranchImmediatePseudo<GPR64, uimm6_64b>;
 
-def : Pat<(AArch64CBrr i32:$Cond, GPR32:$Rn, GPR32:$Rt, bb:$Target),
-          (CBWPrr ccode:$Cond, GPR32:$Rn, GPR32:$Rt, am_brcmpcond:$Target)>;
-def : Pat<(AArch64CBrr i32:$Cond, GPR64:$Rn, GPR64:$Rt, bb:$Target),
-          (CBXPrr ccode:$Cond, GPR64:$Rn, GPR64:$Rt, am_brcmpcond:$Target)>;
-def : Pat<(AArch64CBri i32:$Cond, GPR32:$Rn, i32:$Imm, bb:$Target),
-          (CBWPri ccode:$Cond, GPR32:$Rn, uimm6_32b:$Imm, am_brcmpcond:$Target)>;
-def : Pat<(AArch64CBri i32:$Cond, GPR64:$Rn, i64:$Imm, bb:$Target),
-          (CBXPri ccode:$Cond, GPR64:$Rn, uimm6_64b:$Imm, am_brcmpcond:$Target)>;
+ def : Pat<(AArch64CBrr i32:$Cond, GPR32:$Rn, GPR32:$Rt, bb:$Target),
+           (CBWPrr ccode:$Cond, GPR32:$Rn, GPR32:$Rt, am_brcmpcond:$Target)>;
+ def : Pat<(AArch64CBrr i32:$Cond, GPR64:$Rn, GPR64:$Rt, bb:$Target),
+           (CBXPrr ccode:$Cond, GPR64:$Rn, GPR64:$Rt, am_brcmpcond:$Target)>;
+ def : Pat<(AArch64CBri i32:$Cond, GPR32:$Rn, i32:$Imm, bb:$Target),
+           (CBWPri ccode:$Cond, GPR32:$Rn, uimm6_32b:$Imm,
+               am_brcmpcond:$Target)>;
+ def : Pat<(AArch64CBri i32:$Cond, GPR64:$Rn, i64:$Imm, bb:$Target),
+           (CBXPri ccode:$Cond, GPR64:$Rn, uimm6_64b:$Imm,
+               am_brcmpcond:$Target)>;
+
+ def : Pat<(AArch64CBrr i32:$Cond, (and GPR32:$Rn, 0xff), (and GPR32:$Rt, 0xff),
+               bb:$Target),
+           (CBBPrr ccode:$Cond, GPR32:$Rn, GPR32:$Rt, bb:$Target,
+               /* UXTB */ 5)>;
+ def : Pat<(AArch64CBrr i32:$Cond, (and GPR32:$Rn, 0xffff),
+               (and GPR32:$Rt, 0xffff), bb:$Target),
+           (CBHPrr ccode:$Cond, GPR32:$Rn, GPR32:$Rt, bb:$Target,
+               /* UXTH */ 6)>;
+ def : Pat<(AArch64CBrr i32:$Cond, (sext_inreg GPR32:$Rn, i8),
+               (sext_inreg GPR32:$Rt, i8), bb:$Target),
+           (CBBPrr ccode:$Cond, GPR32:$Rn, GPR32:$Rt, bb:$Target,
+               /* SXTB */ 9)>;
+ def : Pat<(AArch64CBrr i32:$Cond, (sext_inreg GPR32:$Rn, i16),
+               (sext_inreg GPR32:$Rt, i16), bb:$Target),
+           (CBHPrr ccode:$Cond, GPR32:$Rn, GPR32:$Rt, bb:$Target,
+               /* SXTH */ 10)>;
 
 } // HasCMPBR
 

@@ -13234,8 +13234,20 @@ multiclass CmpBranchRegisterAlias<string mnemonic, string insn> {
 }
 
 class CmpBranchRegisterPseudo<RegisterClass regtype>
-  : Pseudo<(outs), (ins ccode:$Cond, regtype:$Rt, regtype:$Rm, am_brcmpcond:$Target), []>,
-    Sched<[WriteBr]> {
+    : Pseudo<(outs),
+             (ins ccode:$Cond, regtype:$Rt, regtype:$Rm, am_brcmpcond:$Target),
+             []>,
+      Sched<[WriteBr]> {
+  let isBranch = 1;
+  let isTerminator = 1;
+}
+
+class CmpBranchExtRegisterPseudo
+    : Pseudo<(outs),
+             (ins ccode:$Cond, GPR32:$Rt, GPR32:$Rm, am_brcmpcond:$Target,
+                 imm0_31:$Ext),
+             []>,
+      Sched<[WriteBr]> {
   let isBranch = 1;
   let isTerminator = 1;
 }
